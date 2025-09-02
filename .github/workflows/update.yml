@@ -1,12 +1,12 @@
       - name: Fetch JSON from Sofascore
         run: |
           import requests, json
-          url = "https://www.sofascore.com/api/v1/sport/cricket/events/live"
+          url = "https://ytvlive.pages.dev/cricket.json"
           headers = {
               "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0 Safari/537.36",
               "Accept": "application/json, text/plain, */*",
-              "Referer": "https://www.sofascore.com/",
-              "Origin": "https://www.sofascore.com"
+              "Referer": "https://ytvlive.pages.dev/",
+              "Origin": "https://ytvlive.pages.dev/"
           }
           r = requests.get(url, headers=headers)
           if r.status_code == 200:
