@@ -1,0 +1,40 @@
+name: Update Sofascore Cricket JSON
+
+on:
+  schedule:
+    - cron: "*/1 * * * *"   # run every 10 minutes
+  workflow_dispatch:         # allows manual run
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Fetch JSON from Sofascore
+        run: |
+          import requests, json
+          url = "https://www.sofascore.com/api/v1/sport/cricket/events/live"
+          r = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
+          if r.status_code == 200:
+              data = r.json()
+              with open("cricket.json", "w", encoding="utf-8") as f:
+                  json.dump(data, f, indent=2, ensure_ascii=False)
+              print("Updated cricket.json with latest data")
+          else:
+              print("Failed to fetch JSON:", r.status_code)
+        shell: python
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cricket.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto update cricket.json"
+          git push
