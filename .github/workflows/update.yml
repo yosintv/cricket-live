@@ -1,19 +1,45 @@
-      - name: Fetch JSON from Sofascore
+name: Mirror Cricket JSON
+
+on:
+  schedule:
+    - cron: "* * * * *"   # run every 1 minute
+  workflow_dispatch:
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Fetch JSON from ytv pages
         run: |
           import requests, json
           url = "https://ytvlive.pages.dev/cricket.json"
-          headers = {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0 Safari/537.36",
-              "Accept": "application/json, text/plain, */*",
-              "Referer": "https://ytvlive.pages.dev/",
-              "Origin": "https://ytvlive.pages.dev/"
-          }
-          r = requests.get(url, headers=headers)
+          r = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
           if r.status_code == 200:
-              data = r.json()
-              with open("cricket.json", "w", encoding="utf-8") as f:
-                  json.dump(data, f, indent=2, ensure_ascii=False)
-              print("✅ Updated cricket.json with latest data")
+              try:
+                  data = r.json()
+                  with open("cricket.json", "w", encoding="utf-8") as f:
+                      json.dump(data, f, indent=2, ensure_ascii=False)
+                  print("✅ cricket.json updated")
+              except Exception:
+                  print("⚠️ Not JSON, saving raw text")
+                  with open("cricket.json", "w", encoding="utf-8") as f:
+                      f.write(r.text)
           else:
-              print("❌ Failed to fetch JSON:", r.status_code, r.text[:200])
+              print("❌ Failed:", r.status_code, r.text[:200])
         shell: python
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cricket.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Mirror cricket.json from ytv"
+          git push
